@@ -127,6 +127,7 @@ async function run() {
 		const imageBuffer = await page.screenshot({fullPage: true});
 		const imageBase64 = imageBuffer.toString("base64");
 		const pageSource = await page.content();
+		const pageText = await page.innerText("body");
 
 		spinner.text = "Cleaning up browser session early...";
 		await cleanup();
@@ -157,7 +158,7 @@ Identify specific strengths, critical weaknesses, and provide concrete, actionab
 						content: [
 							{
 								type: "text",
-								text: `${prompt}\n\nHere is the raw HTML page source for your reference:\n\n\`\`\`html\n${pageSource}\n\`\`\`\n\nAnd along with the source, analyze the attached screenshot of the rendered page.`,
+								text: `${prompt}\n\nBelow is the extracted text content from the page:\n\n---\n${pageText}\n---\n\nAlso analyze the attached screenshot of the rendered page.`,
 							},
 							{
 								type: "image_url",
