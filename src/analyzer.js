@@ -5,14 +5,18 @@ import BrowsercashSDK from "@browsercash/sdk";
 import OpenAI from "openai";
 import {chromium} from "playwright";
 import "dotenv/config";
+import chalk from "chalk";
+import {Command} from "commander";
+import inquirer from "inquirer";
+import ora from "ora";
 
 if (!process.env.NVIDIA_API_KEY) {
-	console.error("Error: NVIDIA_API_KEY environment variable is not set.");
+	console.error(chalk.red("Error: NVIDIA_API_KEY environment variable is not set."));
 	process.exit(1);
 }
 
 if (!process.env.ZEN_API_KEY) {
-	console.error("Error: ZEN_API_KEY environment variable is not set.");
+	console.error(chalk.red("Error: ZEN_API_KEY environment variable is not set."));
 	process.exit(1);
 }
 
@@ -28,59 +32,86 @@ const openai = new OpenAI({
 // https://build.nvidia.com/models
 const visionModel = "qwen/qwen3.5-397b-a17b";
 
+const spinner = ora({
+	spinner: "simpleDotsScrolling",
+	color: "cyan",
+	interval: 90,
+});
+
 // Handle interrupts like Ctrl+C
 process.on("SIGINT", async () => {
-	console.log("\nReceived SIGINT. Cleaning up...");
+	if (spinner.isSpinning) spinner.stop();
+	console.log(chalk.yellow("\nReceived SIGINT. Cleaning up..."));
 	await cleanup();
 	process.exit(0);
 });
 
 process.on("SIGTERM", async () => {
-	console.log("\nReceived SIGTERM. Cleaning up...");
+	if (spinner.isSpinning) spinner.stop();
+	console.log(chalk.yellow("\nReceived SIGTERM. Cleaning up..."));
 	await cleanup();
 	process.exit(0);
 });
 
-const targetUrl = process.argv[2];
-if (!targetUrl) {
-	console.error("Usage: node src/app.js <url>");
-	process.exit(1);
-}
+const program = new Command().name("analyzer").description("Analyze landing pages using AI directly from the CLI.").argument("[url]", "The URL of the landing page to analyze").parse(process.argv);
 
-try {
-	new URL(targetUrl);
-} catch (err) {
-	console.error("Invalid URL. Please provide a URL like https://example.com");
-	process.exit(1);
+let targetUrl = program.args[0];
+
+if (!targetUrl) {
+	// noinspection JSUnusedGlobalSymbols
+	const answers = await inquirer.prompt([
+		{
+			type: "input",
+			name: "url",
+			message: chalk.cyan("What is the URL of the landing page you want to analyze?"),
+			validate: (input) => {
+				try {
+					new URL(input);
+					return true;
+				} catch (err) {
+					return "Please enter a valid URL (e.g., https://example.com)";
+				}
+			},
+		},
+	]);
+	// noinspection JSUnresolvedReference
+	targetUrl = answers.url;
+} else {
+	try {
+		new URL(targetUrl);
+	} catch (err) {
+		console.error(chalk.red("Invalid URL. Please provide a URL like https://example.com"));
+		process.exit(1);
+	}
 }
 
 let session;
 let browser;
 
 async function run() {
-	console.log(`Analyzing: ${targetUrl}`);
+	console.log(chalk.bold.green(`\n🚀 Analyzing: ${targetUrl}\n`));
 
 	const initialDomain = getRootDomain(targetUrl).replace(/[^a-zA-Z0-9-]/g, "_");
 	const initialDomainDir = path.join(process.cwd(), "reports", initialDomain);
 	if (existsSync(initialDomainDir)) {
-		console.log(`   Output directory "${initialDomainDir}" already exists. Skipping analysis.`);
+		console.log(chalk.yellow(`   Output directory "${initialDomainDir}" already exists. Skipping analysis.`));
 		return;
 	}
 
-	console.log("1. Creating browser session...");
+	spinner.start("Creating browser session...");
 
 	try {
 		session = await bcClient.browser.session.create();
-		console.log(`   Session created! ID: ${truncate(session.sessionId)} (${session.servedBy})`);
+		spinner.succeed(`Session created! ID: ${chalk.cyan(truncate(session.sessionId))} (${chalk.gray(session.servedBy)})`);
 
-		console.log("2. Connecting Playwright...");
+		spinner.start("Connecting Playwright...");
 		browser = await chromium.connectOverCDP(session.cdpUrl);
 		const page = await browser.newPage();
 
 		// Use a standard desktop viewport
 		await page.setViewportSize({width: 1440, height: 900});
 
-		console.log(`3. Navigating to ${targetUrl} ...`);
+		spinner.text = `Navigating to ${chalk.green(targetUrl)} ...`;
 		await page.goto(targetUrl, {waitUntil: "networkidle", timeout: 45000});
 
 		const actualUrl = page.url();
@@ -88,16 +119,16 @@ async function run() {
 
 		const domainDir = path.join(process.cwd(), "reports", domain);
 		if (existsSync(domainDir)) {
-			console.log(`   Output directory "${domainDir}" already exists. Skipping analysis.`);
+			spinner.warn(`Output directory "${chalk.yellow(domainDir)}" already exists. Skipping analysis.`);
 			return;
 		}
 
-		console.log("   Taking screenshot & extracting page source...");
+		spinner.text = "Taking screenshot & extracting page source...";
 		const imageBuffer = await page.screenshot({fullPage: true});
 		const imageBase64 = imageBuffer.toString("base64");
 		const pageSource = await page.content();
 
-		console.log("   Cleaning up browser session early...");
+		spinner.text = "Cleaning up browser session early...";
 		await cleanup();
 
 		const prompt = `Please analyze the landing page shown in the screenshot and the accompanying HTML source code. 
@@ -112,7 +143,7 @@ Specifically evaluate the following criteria:
 
 Identify specific strengths, critical weaknesses, and provide concrete, actionable recommendations to improve conversion rates.`;
 
-		console.log("4. Generating comprehensive analysis report...");
+		spinner.start("Generating comprehensive analysis report...");
 		const reportResponse = await fetchWithRetry(() =>
 			openai.chat.completions.create({
 				model: visionModel,
@@ -139,21 +170,22 @@ Identify specific strengths, critical weaknesses, and provide concrete, actionab
 		);
 
 		const finalReportText = reportResponse.choices[0].message.content;
+		spinner.succeed("Report generated successfully!");
 
 		// Save artifacts to the domain directory
-		console.log("6. Saving artifacts...");
+		spinner.start("Saving artifacts...");
 
 		await fs.mkdir(domainDir, {recursive: true});
 
 		// 1. Save screenshot
 		const screenshotPath = path.join(domainDir, `${domain}_screenshot.png`);
 		await fs.writeFile(screenshotPath, imageBuffer);
-		console.log(`   Saved screenshot to: "${screenshotPath}"`);
+		spinner.info(`Saved screenshot to: ${chalk.green(screenshotPath)}`);
 
 		// 2. Save page source
 		const sourcePath = path.join(domainDir, `${domain}_source.html`);
 		await fs.writeFile(sourcePath, pageSource, "utf-8");
-		console.log(`   Saved page source to: "${sourcePath}"`);
+		spinner.info(`Saved page source to: ${chalk.green(sourcePath)}`);
 
 		// 3. Save report
 		const screenshotFileName = `${domain}_screenshot.png`;
@@ -161,10 +193,11 @@ Identify specific strengths, critical weaknesses, and provide concrete, actionab
 		const reportPath = path.join(domainDir, `${domain}_report.md`);
 		await fs.writeFile(reportPath, finalReport, "utf-8");
 
-		console.log(`\nSuccess! All artifacts saved in: "${domainDir}"`);
-		console.log(`Final report written to: "${reportPath}"`);
+		spinner.succeed(chalk.bold.green(`Success! All artifacts saved in: ${domainDir}`));
+		console.log(chalk.cyan(`\nFinal report written to: ${chalk.underline(reportPath)}\n`));
 	} catch (err) {
-		console.error("An error occurred during task execution:", err);
+		if (spinner.isSpinning) spinner.fail("An error occurred during task execution.");
+		console.error(chalk.red(err));
 	} finally {
 		await cleanup();
 	}
@@ -185,7 +218,7 @@ async function fetchWithRetry(apiCall, maxRetries = 5) {
 		} catch (err) {
 			if (err.status === 429 && i < maxRetries - 1) {
 				const waitTime = 2 ** i * 5000;
-				console.log(`   Rate limited! Retrying in ${waitTime / 1000} seconds...`);
+				spinner.warn(chalk.yellow(`Rate limited! Retrying in ${waitTime / 1000} seconds...`)).start("Generating comprehensive analysis report (this may take awhile)");
 				await new Promise((r) => setTimeout(r, waitTime));
 			} else {
 				throw err;
@@ -198,17 +231,29 @@ async function fetchWithRetry(apiCall, maxRetries = 5) {
  * Cleans up resources by closing the browser and session.
  */
 async function cleanup() {
-	console.log("\nCleaning up...");
+	let neededCleanup = false;
+
+	if (browser || session) {
+		neededCleanup = true;
+		if (!spinner.isSpinning) {
+			spinner.start("Cleaning up...");
+		}
+	}
+
 	if (browser) {
-		process.stdout.write("\nCleaning up browser...");
+		spinner.text = "Cleaning up browser...";
 		await browser.close().catch(() => {});
 		browser = null;
 	}
 
 	if (session) {
-		process.stdout.write(`\nStopping browser session ${truncate(session.sessionId)}...`);
+		spinner.text = `Stopping browser session ${truncate(session.sessionId)}...`;
 		await bcClient.browser.session.stop({sessionId: session.sessionId}).catch(() => {});
 		session = null;
+	}
+
+	if (neededCleanup) {
+		spinner.succeed("Cleanup complete.");
 	}
 }
 
