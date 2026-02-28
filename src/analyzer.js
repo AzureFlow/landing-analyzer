@@ -15,11 +15,6 @@ if (!process.env.NVIDIA_API_KEY) {
 	process.exit(1);
 }
 
-if (!process.env.ZEN_API_KEY) {
-	console.error(chalk.red("Error: ZEN_API_KEY environment variable is not set."));
-	process.exit(1);
-}
-
 const bcClient = new BrowsercashSDK({
 	apiKey: process.env.BROWSERCASH_API_KEY,
 });
