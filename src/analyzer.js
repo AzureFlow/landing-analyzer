@@ -96,7 +96,9 @@ async function run() {
 	spinner.start("Creating browser session...");
 
 	try {
-		session = await bcClient.browser.session.create();
+		session = await bcClient.browser.session.create({
+			type: "hosted",
+		});
 		spinner.succeed(`Session created! ID: ${chalk.cyan(truncate(session.sessionId))} (${chalk.gray(session.servedBy)})`);
 
 		spinner.start("Connecting Playwright...");
