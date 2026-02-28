@@ -10,7 +10,7 @@
 	"main": "index.js",
 	"scripts": {
 		"lint": "biome check src",
-		"start": "node src/analyzer.js"
+		"start": "node --no-warnings src/analyzer.js"
 	},
 	"dependencies": {
 		"@browsercash/sdk": "^0.10.0",
