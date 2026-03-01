@@ -106,7 +106,8 @@ async function run() {
 		const page = await browser.newPage();
 
 		// Use a standard desktop viewport
-		await page.setViewportSize({width: 1440, height: 900});
+		const pageViewport = {width: 1440, height: 900};
+		await page.setViewportSize(pageViewport);
 
 		spinner.text = `Navigating to ${chalk.green(targetUrl)} ...`;
 		await page.goto(targetUrl, {waitUntil: "networkidle", timeout: 45000});
@@ -121,7 +122,15 @@ async function run() {
 		}
 
 		spinner.text = "Taking screenshot & extracting page source...";
-		const imageBuffer = await page.screenshot({fullPage: true});
+		const imageBuffer = await page.screenshot({
+			fullPage: true,
+			clip: {
+				x: 0,
+				y: 0,
+				width: pageViewport.width,
+				height: await page.evaluate(() => document.documentElement.scrollHeight),
+			},
+		});
 		const imageBase64 = imageBuffer.toString("base64");
 		const pageSource = await page.content();
 		const pageText = await page.innerText("body");
