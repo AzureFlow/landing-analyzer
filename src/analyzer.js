@@ -99,7 +99,10 @@ async function run() {
 		session = await bcClient.browser.session.create({
 			type: "hosted",
 		});
+		const viewerUrl = `https://dash.browser.cash/cdp_tabs?ws=${encodeURIComponent(session.cdpUrl)}&theme=light`;
+
 		spinner.succeed(`Session created! ID: ${chalk.cyan(truncate(session.sessionId.toUpperCase(), 12))} (${chalk.gray(session.servedBy)})`);
+		console.log(`View your session live: ${viewerUrl}`);
 
 		spinner.start("Connecting Playwright...");
 		browser = await chromium.connectOverCDP(session.cdpUrl);
