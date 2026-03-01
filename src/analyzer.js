@@ -99,7 +99,7 @@ async function run() {
 		session = await bcClient.browser.session.create({
 			type: "hosted",
 		});
-		spinner.succeed(`Session created! ID: ${chalk.cyan(truncate(session.sessionId))} (${chalk.gray(session.servedBy)})`);
+		spinner.succeed(`Session created! ID: ${chalk.cyan(truncate(session.sessionId.toUpperCase(), 12))} (${chalk.gray(session.servedBy)})`);
 
 		spinner.start("Connecting Playwright...");
 		browser = await chromium.connectOverCDP(session.cdpUrl);
@@ -245,7 +245,7 @@ async function cleanup() {
 	}
 
 	if (session) {
-		spinner.text = `Stopping browser session ${truncate(session.sessionId)}...`;
+		spinner.text = `Stopping browser session ${truncate(session.sessionId.toUpperCase(), 12)}...`;
 		await bcClient.browser.session.stop({sessionId: session.sessionId}).catch(() => {});
 		session = null;
 	}
