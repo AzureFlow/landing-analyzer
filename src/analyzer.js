@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import BrowsercashSDK from "@browsercash/sdk";
 import OpenAI from "openai";
-import {chromium} from "playwright";
+import {chromium} from "playwright-core";
 import "dotenv/config";
 import chalk from "chalk";
 import {Command} from "commander";
