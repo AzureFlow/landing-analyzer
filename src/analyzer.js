@@ -10,6 +10,8 @@ import {Command} from "commander";
 import inquirer from "inquirer";
 import ora from "ora";
 
+const FORCE_DARK_MODE = true;
+
 if (!process.env.NVIDIA_API_KEY) {
 	console.error(chalk.red("Error: NVIDIA_API_KEY environment variable is not set."));
 	process.exit(1);
@@ -111,6 +113,10 @@ async function run() {
 		spinner.start("Connecting Playwright...");
 		browser = await chromium.connectOverCDP(session.cdpUrl);
 		const page = await browser.newPage();
+
+		if (FORCE_DARK_MODE) {
+			await page.emulateMedia({colorScheme: "dark"});
+		}
 
 		// Use a standard desktop viewport
 		const pageViewport = {width: 1440, height: 900};
