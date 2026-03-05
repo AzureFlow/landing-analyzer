@@ -33,6 +33,10 @@ const spinner = ora({
 	interval: 90,
 });
 
+let spinnerElapsedTimer = null;
+let spinnerElapsedStartAt = 0;
+let spinnerElapsedBaseText = "";
+
 // Handle interrupts like Ctrl+C
 process.on("SIGINT", async () => {
 	if (spinner.isSpinning) spinner.stop();
@@ -156,7 +160,7 @@ Specifically evaluate the following criteria:
 
 Identify specific strengths, critical weaknesses, and provide concrete, actionable recommendations to improve conversion rates.`;
 
-		spinner.start("Generating comprehensive analysis report...");
+		startSpinnerWithElapsed("Generating comprehensive analysis report");
 		const reportResponse = await fetchWithRetry(() =>
 			openai.chat.completions.create({
 				model: visionModel,
@@ -182,6 +186,7 @@ Identify specific strengths, critical weaknesses, and provide concrete, actionab
 			}),
 		);
 
+		stopSpinnerWithElapsed();
 		const finalReportText = reportResponse.choices[0].message.content;
 		spinner.succeed("Report generated successfully!");
 
@@ -209,9 +214,11 @@ Identify specific strengths, critical weaknesses, and provide concrete, actionab
 		spinner.succeed(chalk.bold.green(`Success! All artifacts saved in: ${domainDir}`));
 		console.log(chalk.cyan(`\nFinal report written to: ${chalk.underline(reportPath)}\n`));
 	} catch (err) {
+		stopSpinnerWithElapsed();
 		if (spinner.isSpinning) spinner.fail("An error occurred during task execution.");
 		console.error(chalk.red(err));
 	} finally {
+		stopSpinnerWithElapsed();
 		await cleanup();
 	}
 }
@@ -261,7 +268,8 @@ async function fetchWithRetry(apiCall, maxRetries = 5) {
 		} catch (err) {
 			if (err.status === 429 && i < maxRetries - 1) {
 				const waitTime = 2 ** i * 5000;
-				spinner.warn(chalk.yellow(`Rate limited! Retrying in ${waitTime / 1000} seconds...`)).start("Generating comprehensive analysis report (this may take awhile)");
+				spinner.warn(chalk.yellow(`Rate limited! Retrying in ${waitTime / 1000} seconds...`));
+				startSpinnerWithElapsed("Generating comprehensive analysis report (this may take awhile)", {resetStart: false});
 				await new Promise((r) => setTimeout(r, waitTime));
 			} else {
 				throw err;
@@ -298,6 +306,58 @@ async function cleanup() {
 	if (neededCleanup) {
 		spinner.succeed("Cleanup complete.");
 	}
+}
+
+/**
+ * @param {string} baseText
+ * @param {boolean} resetStart
+ */
+function startSpinnerWithElapsed(baseText, resetStart = true) {
+	if (resetStart || !spinnerElapsedStartAt) {
+		spinnerElapsedStartAt = Date.now();
+	}
+
+	spinnerElapsedBaseText = baseText;
+
+	if (!spinner.isSpinning) {
+		spinner.start();
+	}
+
+	updateSpinnerElapsedText();
+
+	if (spinnerElapsedTimer) {
+		clearInterval(spinnerElapsedTimer);
+	}
+
+	spinnerElapsedTimer = setInterval(updateSpinnerElapsedText, 1000);
+}
+
+function stopSpinnerWithElapsed() {
+	if (spinnerElapsedTimer) {
+		clearInterval(spinnerElapsedTimer);
+		spinnerElapsedTimer = null;
+	}
+
+	spinnerElapsedStartAt = 0;
+	spinnerElapsedBaseText = "";
+}
+
+function updateSpinnerElapsedText() {
+	if (!spinnerElapsedStartAt || !spinnerElapsedBaseText || !spinner.isSpinning) {
+		return;
+	}
+
+	const elapsedTotal = Math.floor((Date.now() - spinnerElapsedStartAt) / 1000);
+	let elapsedText;
+	if (elapsedTotal >= 60) {
+		const mins = Math.floor(elapsedTotal / 60);
+		const secs = elapsedTotal % 60;
+		elapsedText = `${mins}m ${secs}s`;
+	} else {
+		elapsedText = `${elapsedTotal}s`;
+	}
+
+	spinner.text = `${spinnerElapsedBaseText} ${chalk.gray(`${elapsedText}...`)}`;
 }
 
 /**
