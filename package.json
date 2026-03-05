@@ -4,6 +4,10 @@
 	"private": true,
 	"description": "Landing page analysis tool",
 	"keywords": [],
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/AzureFlow/landing-analyzer.git"
+	},
 	"license": "MIT",
 	"author": "AzureFlow",
 	"type": "module",
@@ -25,5 +29,9 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4"
+	},
+	"packageManager": "pnpm@9.15.5",
+	"engines": {
+		"node": ">=18"
 	}
 }
