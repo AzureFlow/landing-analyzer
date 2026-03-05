@@ -11,6 +11,9 @@ importers:
       '@browsercash/sdk':
         specifier: ^0.10.0
         version: 0.10.0
+      '@onkernel/sdk':
+        specifier: ^0.42.0
+        version: 0.42.0
       chalk:
         specifier: ^5.6.2
         version: 5.6.2
@@ -228,6 +231,9 @@ packages:
     peerDependenciesMeta:
       '@types/node':
         optional: true
+
+  '@onkernel/sdk@0.42.0':
+    resolution: {integrity: sha512-131myvQzvd/M2AVAc/fNB197inmhjE7tjsIctfdRM1Vj/xi4p4FOx97KKpjHNbqXWpq1MxbkGayWD3inOzQLng==}
 
   ansi-regex@6.2.2:
     resolution: {integrity: sha512-Bq3SmSpyFHaWjPk8If9yc6svM8c56dB5BAtW4Qbw5jHTwwXXcTLoRMkpDJp6VL0XzlWaCHTXrkFURMYmD0sLqg==}
@@ -497,6 +503,8 @@ snapshots:
       '@inquirer/type': 4.0.3
 
   '@inquirer/type@4.0.3': {}
+
+  '@onkernel/sdk@0.42.0': {}
 
   ansi-regex@6.2.2: {}
 

@@ -1,7 +1,6 @@
 import {existsSync} from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
-import BrowsercashSDK from "@browsercash/sdk";
 import OpenAI from "openai";
 import {chromium} from "playwright-core";
 import "dotenv/config";
@@ -9,6 +8,7 @@ import chalk from "chalk";
 import {Command} from "commander";
 import inquirer from "inquirer";
 import ora from "ora";
+import createBrowserProviderAdapter from "./providers/createBrowserProviderAdapter.js";
 
 const FORCE_DARK_MODE = true;
 
@@ -16,10 +16,6 @@ if (!process.env.NVIDIA_API_KEY) {
 	console.error(chalk.red("Error: NVIDIA_API_KEY environment variable is not set."));
 	process.exit(1);
 }
-
-const bcClient = new BrowsercashSDK({
-	apiKey: process.env.BROWSERCASH_API_KEY,
-});
 
 const openai = new OpenAI({
 	apiKey: process.env.NVIDIA_API_KEY,
@@ -54,9 +50,23 @@ process.on("SIGTERM", async () => {
 	process.exit(0);
 });
 
-const program = new Command().name("analyzer").description("Analyze landing pages using AI directly from the CLI.").argument("[url]", "The URL of the landing page to analyze").parse(process.argv);
+const program = new Command()
+	.name("analyzer")
+	.description("Analyze landing pages using AI directly from the CLI.")
+	.option("-p, --provider <provider>", "Browser provider to use (browsercash|kernel)", process.env.BROWSER_PROVIDER || "browsercash")
+	.argument("[url]", "The URL of the landing page to analyze")
+	.parse(process.argv);
 
 let targetUrl = program.args[0];
+const selectedProvider = program.opts().provider || "browsercash";
+
+let browserProvider;
+try {
+	browserProvider = createBrowserProviderAdapter(selectedProvider);
+} catch (err) {
+	console.error(chalk.red(`Error: ${err.message}`));
+	process.exit(1);
+}
 
 if (!targetUrl) {
 	// noinspection JSUnusedGlobalSymbols
@@ -102,17 +112,17 @@ async function run() {
 	spinner.start("Creating browser session...");
 
 	try {
-		session = await bcClient.browser.session.create({
-			type: "hosted",
-		});
-		const viewerUrl = `https://dash.browser.cash/cdp_tabs?ws=${encodeURIComponent(session.cdpUrl)}&theme=light`;
+		session = await browserProvider.createSession();
 
-		spinner.succeed(`Session created! ID: ${chalk.cyan(truncate(session.sessionId.toUpperCase(), 12))} (${chalk.gray(session.servedBy)})`);
-		console.log(`View your session live: ${viewerUrl}`);
+		spinner.succeed(`Session created! ID: ${chalk.cyan(truncate(session.id.toUpperCase(), 12))} (${chalk.gray(session.servedBy || selectedProvider)})`);
+		if (session.viewerUrl) {
+			console.log(`View your session live: ${session.viewerUrl}`);
+		}
 
 		spinner.start("Connecting Playwright...");
 		browser = await chromium.connectOverCDP(session.cdpUrl);
-		const page = await browser.newPage();
+		const context = browser.contexts()[0] || (await browser.newContext());
+		const page = context.pages()[0] || (await context.newPage());
 
 		if (FORCE_DARK_MODE) {
 			await page.emulateMedia({colorScheme: "dark"});
@@ -304,8 +314,8 @@ async function cleanup() {
 	}
 
 	if (session) {
-		spinner.text = `Stopping browser session ${truncate(session.sessionId.toUpperCase(), 12)}...`;
-		await bcClient.browser.session.stop({sessionId: session.sessionId}).catch(() => {});
+		spinner.text = `Stopping browser session ${truncate(session.id.toUpperCase(), 12)}...`;
+		await browserProvider.stopSession(session).catch(() => {});
 		session = null;
 	}
 
