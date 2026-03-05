@@ -124,6 +124,9 @@ async function run() {
 			return;
 		}
 
+		spinner.text = "Scrolling through page...";
+		await autoScroll(page);
+
 		spinner.text = "Taking screenshot & extracting page source...";
 		const imageBuffer = await page.screenshot({
 			fullPage: true,
@@ -214,6 +217,36 @@ Identify specific strengths, critical weaknesses, and provide concrete, actionab
 }
 
 await run();
+
+/**
+ * Scrolls through the entire page to trigger scroll-based animations,
+ * lazy-loaded images, and intersection observer callbacks, then scrolls
+ * back to the top and waits for everything to settle.
+ *
+ * Works alright for most sites.
+ *
+ * @param {import("playwright-core").Page} page
+ */
+async function autoScroll(page) {
+	await page.evaluate(async () => {
+		const scrollHeight = document.documentElement.scrollHeight;
+		const viewportHeight = window.innerHeight;
+		const step = Math.floor(viewportHeight / 2);
+
+		for (let y = 0; y < scrollHeight; y += step) {
+			window.scrollTo(0, y);
+			await new Promise((r) => setTimeout(r, 150));
+		}
+
+		// Scroll to the bottom
+		window.scrollTo(0, scrollHeight);
+		await new Promise((r) => setTimeout(r, 300));
+
+		// Scroll to top
+		window.scrollTo(0, 0);
+		await new Promise((r) => setTimeout(r, 500));
+	});
+}
 
 /**
  * Fetches data with retry logic for rate limiting.
