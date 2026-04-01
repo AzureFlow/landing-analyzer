@@ -14,6 +14,7 @@ Required environment variables:
 - [`NVIDIA_API_KEY`](https://build.nvidia.com/models) (required)
 - [`BROWSERCASH_API_KEY`](https://browser.cash/) (if using `browsercash` provider)
 - [`KERNEL_API_KEY`](https://www.kernel.sh/) (if using `kernel` provider)
+- [`BROWSERBASE_API_KEY`](https://www.browserbase.com/) (if using `browserbase` provider; optional `BROWSERBASE_PROJECT_ID` from the [dashboard](https://www.browserbase.com/sessions))
 
 ## 🔨 Usage
 

@@ -17,6 +17,7 @@
 		"start": "node --no-warnings src/analyzer.js"
 	},
 	"dependencies": {
+		"@browserbasehq/sdk": "^2.9.0",
 		"@browsercash/sdk": "^0.10.0",
 		"@onkernel/sdk": "^0.42.0",
 		"chalk": "^5.6.2",

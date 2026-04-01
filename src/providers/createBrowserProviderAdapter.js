@@ -1,4 +1,5 @@
 import BrowsercashProviderAdapter from "./BrowserProviderAdapter.js";
+import BrowserbaseProviderAdapter from "./BrowserbaseProviderAdapter.js";
 import KernelProviderAdapter from "./KernelProviderAdapter.js";
 
 /**
@@ -19,8 +20,14 @@ function createBrowserProviderAdapter(provider) {
 			}
 
 			return new KernelProviderAdapter();
+		case "BROWSERBASE":
+			if (!process.env.BROWSERBASE_API_KEY) {
+				throw new Error("BROWSERBASE_API_KEY environment variable is not set.");
+			}
+
+			return new BrowserbaseProviderAdapter();
 		default:
-			throw new Error(`Unsupported browser provider: ${provider}. Use one of: BROWSERCASH, KERNEL.`);
+			throw new Error(`Unsupported browser provider: ${provider}. Use one of: BROWSERCASH, KERNEL, BROWSERBASE.`);
 	}
 }
 
