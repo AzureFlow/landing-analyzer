@@ -11,12 +11,13 @@ export default class BrowserbaseProviderAdapter extends BrowserProviderAdapter {
 	}
 
 	async createSession() {
-		const params = {};
-		if (process.env.BROWSERBASE_PROJECT_ID) {
-			params.projectId = process.env.BROWSERBASE_PROJECT_ID;
-		}
-
-		const session = await this.client.sessions.create(params);
+		const session = await this.client.sessions.create({
+			projectId: process.env.BROWSERBASE_PROJECT_ID ?? undefined,
+			browserSettings: {
+				blockAds: true,
+				recordSession: false,
+			},
+		});
 
 		let viewerUrl = `https://browserbase.com/sessions/${session.id}`;
 		try {
