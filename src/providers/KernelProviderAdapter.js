@@ -1,5 +1,5 @@
 import Kernel from "@onkernel/sdk";
-import BrowserProviderAdapter from "./BrowsercashProviderAdapter.js";
+import BrowserProviderAdapter from "./BrowserProviderAdapter.js";
 
 export default class KernelProviderAdapter extends BrowserProviderAdapter {
 	constructor() {

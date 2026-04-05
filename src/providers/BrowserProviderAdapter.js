@@ -1,29 +1,27 @@
-import BrowsercashSDK from "@browsercash/sdk";
-import BrowserProviderAdapter from "./BrowsercashProviderAdapter.js";
+/**
+ * @typedef {object} NormalizedBrowserSession
+ * @property {string} id
+ * @property {string} cdpUrl
+ * @property {string} [servedBy]
+ * @property {string} [viewerUrl]
+ */
 
-export default class BrowsercashProviderAdapter extends BrowserProviderAdapter {
-	constructor() {
-		super();
-
-		this.client = new BrowsercashSDK({
-			apiKey: process.env.BROWSERCASH_API_KEY,
-		});
-	}
-
+/**
+ * @abstract
+ */
+export default class BrowserProviderAdapter {
+	/**
+	 * @returns {Promise<NormalizedBrowserSession>}
+	 */
 	async createSession() {
-		const session = await this.client.browser.session.create({
-			type: "hosted",
-		});
-
-		return {
-			id: session.sessionId,
-			cdpUrl: session.cdpUrl,
-			servedBy: session.servedBy,
-			viewerUrl: `https://dash.browser.cash/cdp_tabs?ws=${encodeURIComponent(session.cdpUrl)}&theme=light`,
-		};
+		throw new Error("createSession() must be implemented by provider adapters.");
 	}
 
+	/**
+	 * @param {NormalizedBrowserSession} session
+	 * @returns {Promise<void>}
+	 */
 	async stopSession(session) {
-		await this.client.browser.session.stop({sessionId: session.id});
+		throw new Error("stopSession() must be implemented by provider adapters.");
 	}
 }

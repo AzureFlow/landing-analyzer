@@ -1,5 +1,5 @@
 import Browserbase from "@browserbasehq/sdk";
-import BrowserProviderAdapter from "./BrowsercashProviderAdapter.js";
+import BrowserProviderAdapter from "./BrowserProviderAdapter.js";
 
 export default class BrowserbaseProviderAdapter extends BrowserProviderAdapter {
 	constructor() {
