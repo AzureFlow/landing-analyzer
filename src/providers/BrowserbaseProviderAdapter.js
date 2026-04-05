@@ -1,4 +1,5 @@
 import Browserbase from "@browserbasehq/sdk";
+import * as constants from "../constants.js";
 import BrowserProviderAdapter from "./BrowserProviderAdapter.js";
 
 export default class BrowserbaseProviderAdapter extends BrowserProviderAdapter {
@@ -17,6 +18,7 @@ export default class BrowserbaseProviderAdapter extends BrowserProviderAdapter {
 				blockAds: true,
 				recordSession: false,
 			},
+			timeout: Math.max(60, constants.BROWSER_TIMEOUT_SECONDS),
 		});
 
 		let viewerUrl = `https://browserbase.com/sessions/${session.id}`;

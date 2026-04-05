@@ -1,4 +1,5 @@
 import BrowsercashSDK from "@browsercash/sdk";
+import * as constants from "../constants.js";
 import BrowserProviderAdapter from "./BrowserProviderAdapter.js";
 
 export default class BrowsercashProviderAdapter extends BrowserProviderAdapter {
@@ -13,6 +14,7 @@ export default class BrowsercashProviderAdapter extends BrowserProviderAdapter {
 	async createSession() {
 		const session = await this.client.browser.session.create({
 			type: "hosted",
+			duration: Math.max(60, constants.BROWSER_TIMEOUT_SECONDS),
 		});
 
 		return {

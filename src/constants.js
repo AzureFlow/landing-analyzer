@@ -1,4 +1,5 @@
 export const FORCE_DARK_MODE = true;
+export const BROWSER_TIMEOUT_SECONDS = 30;
 
 export const SYSTEM_PROMPT = `Please analyze the landing page shown in the screenshot and the accompanying HTML source code. 
 As an expert UI/UX specialist and conversion rate optimization professional, perform a comprehensive teardown based on proven startup landing page best practices.

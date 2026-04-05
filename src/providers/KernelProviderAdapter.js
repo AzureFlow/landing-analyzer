@@ -1,4 +1,5 @@
 import Kernel from "@onkernel/sdk";
+import * as constants from "../constants.js";
 import BrowserProviderAdapter from "./BrowserProviderAdapter.js";
 
 export default class KernelProviderAdapter extends BrowserProviderAdapter {
@@ -11,7 +12,9 @@ export default class KernelProviderAdapter extends BrowserProviderAdapter {
 	}
 
 	async createSession() {
-		const session = await this.client.browsers.create();
+		const session = await this.client.browsers.create({
+			timeout_seconds: constants.BROWSER_TIMEOUT_SECONDS,
+		});
 
 		return {
 			id: session.session_id,
