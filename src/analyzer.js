@@ -1,9 +1,10 @@
 import {existsSync} from "node:fs";
 import fs from "node:fs/promises";
-import path from "node:path";
+import path, {dirname} from "node:path";
 import OpenAI from "openai";
 import {chromium} from "playwright-core";
 import "dotenv/config";
+import {fileURLToPath} from "node:url";
 import chalk from "chalk";
 import {Command} from "commander";
 import inquirer from "inquirer";
@@ -15,6 +16,8 @@ if (!process.env.NVIDIA_API_KEY) {
 	console.error(chalk.red("Error: NVIDIA_API_KEY environment variable is not set."));
 	process.exit(1);
 }
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const openai = new OpenAI({
 	apiKey: process.env.NVIDIA_API_KEY,
@@ -102,7 +105,7 @@ async function run() {
 	console.log(chalk.bold.green(`\n🚀 Analyzing: ${targetUrl}\n`));
 
 	const initialDomain = getRootDomain(targetUrl).replace(/[^a-zA-Z0-9-]/g, "_");
-	const initialDomainDir = path.join(process.cwd(), "reports", initialDomain);
+	const initialDomainDir = path.join(__dirname, "reports", initialDomain);
 	if (existsSync(initialDomainDir)) {
 		console.log(chalk.yellow(`   Output directory "${initialDomainDir}" already exists. Skipping analysis.`));
 		return;
