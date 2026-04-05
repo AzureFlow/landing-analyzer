@@ -132,7 +132,7 @@ async function run() {
 		await page.setViewportSize(pageViewport);
 
 		spinner.text = `Navigating to ${chalk.green(targetUrl)} ...`;
-		await page.goto(targetUrl, {waitUntil: "networkidle", timeout: 45000});
+		await page.goto(targetUrl, {waitUntil: "load", timeout: 30000});
 
 		const actualUrl = page.url();
 		const domain = getRootDomain(actualUrl).replace(/[^a-zA-Z0-9-]/g, "_");
