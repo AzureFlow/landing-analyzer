@@ -272,7 +272,7 @@ async function fetchWithRetry(apiCall, maxRetries = 5) {
 			if (err.status === 429 && i < maxRetries - 1) {
 				const waitTime = 2 ** i * 5000;
 				spinner.warn(chalk.yellow(`Rate limited! Retrying in ${waitTime / 1000} seconds...`));
-				startSpinnerWithElapsed("Generating comprehensive analysis report (this may take awhile)", {resetStart: false});
+				startSpinnerWithElapsed("Generating comprehensive analysis report (this may take awhile)", false);
 				await new Promise((r) => setTimeout(r, waitTime));
 			} else {
 				throw err;
