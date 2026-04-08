@@ -31,7 +31,7 @@ importers:
         version: 13.3.2(@types/node@18.19.130)
       openai:
         specifier: ^6.33.0
-        version: 6.33.0
+        version: 6.33.0(zod@4.3.6)
       ora:
         specifier: ^9.3.0
         version: 9.3.0
@@ -519,6 +519,9 @@ packages:
     resolution: {integrity: sha512-CzhO+pFNo8ajLM2d2IW/R93ipy99LWjtwblvC1RsoSUMZgyLbYFr221TnSNT7GjGdYui6P459mw9JH/g/zW2ug==}
     engines: {node: '>=18'}
 
+  zod@4.3.6:
+    resolution: {integrity: sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg==}
+
 snapshots:
 
   '@biomejs/biome@1.9.4':
@@ -874,7 +877,9 @@ snapshots:
     dependencies:
       mimic-function: 5.0.1
 
-  openai@6.33.0: {}
+  openai@6.33.0(zod@4.3.6):
+    optionalDependencies:
+      zod: 4.3.6
 
   ora@9.3.0:
     dependencies:
@@ -931,3 +936,6 @@ snapshots:
       webidl-conversions: 3.0.1
 
   yoctocolors@2.1.2: {}
+
+  zod@4.3.6:
+    optional: true
