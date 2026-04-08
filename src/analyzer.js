@@ -55,7 +55,7 @@ process.on("SIGTERM", async () => {
 const program = new Command()
 	.name("analyzer")
 	.description("Analyze landing pages using AI directly from the CLI.")
-	.option("-p, --provider <provider>", "Browser provider to use (browsercash|kernel|browserbase)", process.env.BROWSER_PROVIDER || "browsercash")
+	.option("-p, --provider <provider>", "Browser provider to use (browsercash|kernel|browserbase|browseruse)", process.env.BROWSER_PROVIDER || "browsercash")
 	.argument("[url]", "The URL of the landing page to analyze")
 	.parse(process.argv);
 

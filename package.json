@@ -20,6 +20,7 @@
 		"@browserbasehq/sdk": "^2.9.0",
 		"@browsercash/sdk": "^0.13.0",
 		"@onkernel/sdk": "^0.45.0",
+		"browser-use-sdk": "^3.4.2",
 		"chalk": "^5.6.2",
 		"commander": "^14.0.3",
 		"dotenv": "^17.4.0",
