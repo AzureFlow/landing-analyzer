@@ -173,14 +173,14 @@ async function run() {
 				messages: [
 					{
 						role: "system",
-						content: "You are an expert web developer, UI/UX specialist, and conversion rate optimization professional.",
+						content: `${constants.SYSTEM_PROMPT}`,
 					},
 					{
 						role: "user",
 						content: [
 							{
 								type: "text",
-								text: `${constants.SYSTEM_PROMPT}\n\nBelow is the extracted text content from the page:\n\n---\n${pageText}\n---\n\nAlso analyze the attached screenshot of the rendered page.`,
+								text: `Extracted page content:\n\n\`\`\`\n${pageText}\n\`\`\``,
 							},
 							{
 								type: "image_url",
