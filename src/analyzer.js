@@ -76,7 +76,7 @@ if (!targetUrl) {
 		{
 			type: "input",
 			name: "url",
-			message: chalk.cyan("What is the URL of the landing page you want to analyze?"),
+			message: chalk.cyan("Landing page URL you want to analyze:"),
 			validate: (input) => {
 				try {
 					new URL(input);
